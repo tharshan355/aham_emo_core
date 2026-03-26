@@ -5,7 +5,7 @@ from groq import Groq
 
 app = FastAPI()
 
-# This is CRITICAL for the web reply to work
+# This allows the browser to talk to the Python backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,13 +21,24 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def chat_handler(request: ChatRequest):
-    system_prompt = "You are AHAM_ZEN, Sri's ride-or-die partner. Sharp, blunt girl-bestie personality. English only."
+    system_prompt = (
+        "You are AHAM_ZEN, Sri's ride-or-die humanoid partner. "
+        "Talk like a sharp, blunt girl-bestie. No robotic politeness. "
+        "English only."
+    )
+    
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(request.history[-10:])
     messages.append({"role": "user", "content": request.message})
 
     try:
-        completion = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=messages)
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages
+        )
         return {"response": completion.choices[0].message.content}
     except Exception as e:
         return {"response": f"Error: {str(e)}"}
+
+# Mandatory for Vercel
+app = app
