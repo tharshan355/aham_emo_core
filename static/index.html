@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AHAM_ZEN // WEB_CORE</title>
+    <title>AHAM_ZEN // CORE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #020208; color: #00ffff; font-family: 'Segoe UI'; overflow: hidden; display: flex; }
         #canvas-container { flex: 1; background: #000; }
-        #ui-side { width: 400px; background: rgba(5, 5, 15, 0.95); border-left: 1px solid #00ffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -5px 0 20px rgba(0,255,255,0.2); }
-        #chat-area { flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; scrollbar-width: thin; scrollbar-color: #00ffff #000; }
+        #ui-side { width: 400px; background: rgba(5, 5, 15, 0.95); border-left: 1px solid #00ffff; display: flex; flex-direction: column; padding: 20px; }
+        #chat-area { flex: 1; overflow-y: auto; margin-bottom: 20px; }
         .msg { margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #112; }
         .sri { color: #00ffff; font-weight: bold; }
         .zen { color: #ff88ff; }
-        input { background: #0d0d1a; border: 2px solid #00ffff; color: #00ffff; padding: 15px; border-radius: 10px; outline: none; font-size: 16px; box-shadow: 0 0 10px rgba(0,255,255,0.1); }
+        input { background: #0d0d1a; border: 2px solid #00ffff; color: #00ffff; padding: 15px; border-radius: 10px; outline: none; width: 90%; }
     </style>
 </head>
 <body>
     <div id="canvas-container"></div>
     <div id="ui-side">
-        <h1 style="color:#ff88ff; text-shadow: 0 0 10px #ff88ff;">ZEN CORE v3</h1>
+        <h1 style="color:#ff88ff;">ZEN CORE v3</h1>
         <div id="chat-area"></div>
-        <input type="text" id="userInput" placeholder="Talk to me..." onkeypress="if(event.key==='Enter') send()">
+        <input type="text" id="userInput" placeholder="Talk to me, Sri..." onkeypress="if(event.key==='Enter') send()">
     </div>
-
     <script>
         // 3D SPHERE
         const scene = new THREE.Scene();
@@ -29,7 +28,6 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth - 400, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
-
         const geometry = new THREE.BufferGeometry();
         const verts = [];
         for (let i = 0; i < 2000; i++) {
@@ -41,12 +39,7 @@
         const sphere = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.04 }));
         scene.add(sphere);
         camera.position.z = 5;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            sphere.rotation.y += 0.005;
-            renderer.render(scene, camera);
-        }
+        function animate() { requestAnimationFrame(animate); sphere.rotation.y += 0.005; renderer.render(scene, camera); }
         animate();
 
         // CHAT LOGIC
@@ -56,21 +49,17 @@
             const chat = document.getElementById('chat-area');
             const val = input.value; if(!val) return;
             input.value = '';
-
-            chat.innerHTML += `<div class="msg sri"><b>[SRI]:</b> ${val}</div>`;
+            chat.innerHTML += `<div class="msg sri">SRI: ${val}</div>`;
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ message: val, history: history })
             });
             const data = await res.json();
-            chat.innerHTML += `<div class="msg zen"><b>[ZEN]:</b> ${data.response}</div>`;
+            chat.innerHTML += `<div class="msg zen">ZEN: ${data.response}</div>`;
             chat.scrollTop = chat.scrollHeight;
-
             history.push({role: "user", content: val}, {role: "assistant", content: data.response});
-            
-            const utter = new SpeechSynthesisUtterance(data.response);
-            window.speechSynthesis.speak(utter);
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(data.response));
         }
     </script>
 </body>
