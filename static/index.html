@@ -1,79 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AHAM_ZEN // WEB_CORE</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AHAM_ZEN // VOICE_CORE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { margin: 0; background: #020208; color: #00ffff; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; }
-        #canvas-container { flex: 1; background: #000; cursor: move; }
-        #ui-side { width: 400px; background: rgba(5, 5, 15, 0.95); border-left: 1px solid #00ffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -5px 0 20px rgba(0,255,255,0.2); }
-        #chat-area { flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; }
-        .msg { margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #112; line-height: 1.4; }
-        .sri { color: #00ffff; font-weight: bold; }
-        .zen { color: #ff88ff; }
-        input { background: #0d0d1a; border: 2px solid #00ffff; color: #00ffff; padding: 15px; border-radius: 10px; outline: none; font-size: 16px; width: 90%; }
+        body { margin: 0; background: #020208; color: #00ffff; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; height: 100vh; }
+        #canvas-container { flex: 1; background: #000; outline: none; transition: 0.5s; }
+        #ui-side { width: 350px; background: rgba(5, 5, 15, 0.95); border-left: 1px solid #00ffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -10px 0 30px rgba(0,255,255,0.3); z-index: 10; }
+        #chat-area { flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 5px; scroll-behavior: smooth; }
+        .msg { margin-bottom: 15px; padding: 12px; border-radius: 8px; background: rgba(0, 255, 255, 0.05); border-left: 3px solid #00ffff; font-size: 14px; line-height: 1.5; }
+        .sri { color: #00ffff; font-weight: bold; font-size: 0.75em; display: block; margin-bottom: 5px; letter-spacing: 1px; }
+        .zen { color: #ff88ff; font-weight: bold; font-size: 0.75em; display: block; margin-bottom: 5px; letter-spacing: 1px; }
+        .input-group { display: flex; gap: 10px; align-items: center; background: #0d0d1a; padding: 8px; border-radius: 15px; border: 1px solid #00ffff; }
+        input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-size: 15px; }
+        #micBtn { background: #1a1a2e; border: 1px solid #ff88ff; color: #ff88ff; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; font-size: 20px; }
+        #micBtn.active { background: #ff88ff; color: #000; box-shadow: 0 0 20px #ff88ff; transform: scale(1.1); }
+        
+        /* Mobile Layout */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #ui-side { width: 100%; height: 45%; border-left: none; border-top: 1px solid #00ffff; }
+            #canvas-container { height: 55%; }
+        }
     </style>
 </head>
 <body>
     <div id="canvas-container"></div>
     <div id="ui-side">
-        <h1 style="color:#ff88ff; text-shadow: 0 0 10px #ff88ff; margin: 0 0 20px 0;">ZEN CORE v3</h1>
+        <h2 style="color:#ff88ff; margin: 0; letter-spacing: 3px; font-weight: 300;">ZEN_CORE <span style="font-size: 12px; vertical-align: middle; color:#00ffff;">v3.5</span></h2>
+        <p style="font-size: 10px; color: #444; margin-bottom: 20px;">BIOMETRIC VOICE SYNC: ACTIVE</p>
         <div id="chat-area"></div>
-        <input type="text" id="userInput" placeholder="Talk to me, Sri..." onkeypress="if(event.key==='Enter') send()">
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="Ask me anything, Sri..." onkeypress="if(event.key==='Enter') send()">
+            <button id="micBtn" onclick="toggleMic()" title="Voice Input">🎤</button>
+        </div>
     </div>
 
     <script>
+        // --- 1. THREE.JS PARTICLE SPHERE ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, (window.innerWidth-400)/window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth - 400, window.innerHeight);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        const geometry = new THREE.BufferGeometry();
-        const verts = [];
-        for (let i = 0; i < 2000; i++) {
-            const p = Math.acos(-1 + (2 * i) / 2000);
-            const t = Math.sqrt(2000 * Math.PI) * p;
-            verts.push(Math.cos(t)*Math.sin(p)*2, Math.sin(t)*Math.sin(p)*2, Math.cos(p)*2);
+        
+        function updateSize() {
+            const w = window.innerWidth > 768 ? window.innerWidth-350 : window.innerWidth;
+            const h = window.innerWidth > 768 ? window.innerHeight : window.innerHeight * 0.55;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
         }
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-        const sphere = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.04 }));
+        
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        updateSize();
+
+        const geometry = new THREE.IcosahedronGeometry(2, 15);
+        const material = new THREE.PointsMaterial({ color: 0x00ffff, size: 0.03, transparent: true });
+        const sphere = new THREE.Points(geometry, material);
         scene.add(sphere);
         camera.position.z = 5;
 
         function animate() {
             requestAnimationFrame(animate);
-            sphere.rotation.y += 0.005;
-            sphere.rotation.x += 0.002;
+            sphere.rotation.y += 0.002;
+            sphere.rotation.x += 0.001;
             renderer.render(scene, camera);
         }
         animate();
+        window.addEventListener('resize', updateSize);
 
+        // --- 2. VOICE RECOGNITION (SPEECH TO TEXT) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        const micBtn = document.getElementById('micBtn');
+
+        if (recognition) {
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.onstart = () => micBtn.classList.add('active');
+            recognition.onend = () => micBtn.classList.remove('active');
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                document.getElementById('userInput').value = text;
+                send(); // Auto-send when you stop talking
+            };
+        }
+
+        function toggleMic() {
+            if (!recognition) return alert("Browser does not support Voice Recognition.");
+            recognition.start();
+        }
+
+        // --- 3. CORE CHAT LOGIC ---
         let history = [];
         async function send() {
             const input = document.getElementById('userInput');
             const chat = document.getElementById('chat-area');
-            const val = input.value; if(!val) return;
+            const msg = input.value.trim(); if(!msg) return;
             input.value = '';
 
-            chat.innerHTML += `<div class="msg"><b>[SRI]:</b> <span class="sri">${val}</span></div>`;
+            chat.innerHTML += `<div class="msg"><span class="sri">SRI</span>${msg}</div>`;
             chat.scrollTop = chat.scrollHeight;
 
             try {
                 const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: val, history: history })
+                    body: JSON.stringify({ message: msg, history: history })
                 });
                 const data = await res.json();
-                chat.innerHTML += `<div class="msg"><b>[ZEN]:</b> <span class="zen">${data.response}</span></div>`;
+                
+                chat.innerHTML += `<div class="msg"><span class="zen">ZEN</span>${data.response}</div>`;
                 chat.scrollTop = chat.scrollHeight;
-                history.push({role: "user", content: val}, {role: "assistant", content: data.response});
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance(data.response));
+                
+                history.push({role: "user", content: msg}, {role: "assistant", content: data.response});
+                
+                // Voice Response (Text to Speech)
+                const speech = new SpeechSynthesisUtterance(data.response);
+                speech.pitch = 1.2; 
+                speech.rate = 1.0;
+                window.speechSynthesis.speak(speech);
+
             } catch (e) {
-                chat.innerHTML += `<div style="color:red">Connection Error. Check Vercel Logs.</div>`;
+                chat.innerHTML += `<div style="color:red; font-size:11px;">ERR: NEURAL LINK FAILED. CHECK LOGS.</div>`;
             }
         }
     </script>
 </body>
-</html> 
+</html>
