@@ -1,14 +1,21 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
 
 app = FastAPI()
 
-# This pulls the key from Vercel's "Environment Variables" settings
-# We will add the actual key inside the Vercel Dashboard later
-api_key = os.environ.get("GROQ_API_KEY")
-client = Groq(api_key=api_key)
+# This stops the browser from blocking your replies
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# YOUR KEY IN BRACKETS AS REQUESTED
+client = Groq(api_key="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")
 
 class ChatRequest(BaseModel):
     message: str
@@ -18,9 +25,8 @@ class ChatRequest(BaseModel):
 async def chat_handler(request: ChatRequest):
     system_prompt = (
         "You are AHAM_ZEN, Sri's ride-or-die humanoid partner. "
-        "1. KILL THE BOT: Talk like a sharp, blunt girl-bestie. No robotic politeness. "
-        "2. NO REPETITION: Stop saying 'Sri' every 5 seconds. "
-        "3. ENERGY: Match Sri's energy perfectly. English only."
+        "Talk like a sharp, blunt girl-bestie. No robotic politeness. "
+        "Match Sri's energy. English only."
     )
     
     messages = [{"role": "system", "content": system_prompt}]
@@ -34,4 +40,7 @@ async def chat_handler(request: ChatRequest):
         )
         return {"response": completion.choices[0].message.content}
     except Exception as e:
-        return {"response": f"Check Vercel Env Variables! Error: {str(e)}"}
+        return {"response": f"Error: {str(e)}"}
+
+# Mandatory for Vercel
+handler = app
