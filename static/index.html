@@ -13,31 +13,23 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
         body { background: var(--midnight); height: 100vh; overflow: hidden; color: #fff; }
 
-        /* --- STUNNING GLASSMORHISM LOGIN --- */
         #auth-screen {
             position: fixed; inset: 0; z-index: 9999;
             background: radial-gradient(circle at center, #111 0%, #000 100%);
             display: flex; align-items: center; justify-content: center;
-            transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1), opacity 1s;
+            transition: 1s cubic-bezier(0.8, 0, 0.2, 1);
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 60px; border-radius: 30px; text-align: center;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
-            width: 90%; max-width: 400px;
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); padding: 50px; border-radius: 30px;
+            text-align: center; width: 90%; max-width: 400px;
         }
         
-        /* --- MAIN DASHBOARD --- */
-        #main-wrapper { 
-            display: none; opacity: 0; width: 100%; height: 100vh; 
-            background: #000; flex-direction: row; transition: 1.5s;
-        }
-        #canvas-container { flex: 1; position: relative; }
+        #main-wrapper { display: none; opacity: 0; width: 100%; height: 100vh; flex-direction: row; transition: 1.5s; }
+        #canvas-container { flex: 1; position: relative; background: #000; cursor: crosshair; }
         
         #ui-side { 
-            width: 420px; background: rgba(5, 5, 5, 0.9);
+            width: 420px; background: rgba(5, 5, 5, 0.95);
             backdrop-filter: blur(40px); border-left: 1px solid rgba(255,255,255,0.05);
             display: flex; flex-direction: column; padding: 40px;
         }
@@ -45,7 +37,7 @@
         .brand-name { font-size: 32px; letter-spacing: 10px; font-weight: 200; margin-bottom: 5px; }
         .brand-name span { color: var(--neon-pink); font-weight: 900; text-shadow: 0 0 20px var(--neon-pink); }
         
-        #chat-area { flex: 1; overflow-y: auto; margin: 30px 0; padding-right: 15px; }
+        #chat-area { flex: 1; overflow-y: auto; margin: 30px 0; padding-right: 15px; scroll-behavior: smooth; }
         .msg { margin-bottom: 25px; animation: slideIn 0.4s ease forwards; }
         .msg-label { font-size: 10px; font-weight: bold; letter-spacing: 2px; margin-bottom: 6px; }
         .msg-content { 
@@ -53,7 +45,6 @@
             font-size: 15px; line-height: 1.5; border-left: 3px solid var(--neon-cyan);
         }
 
-        /* COMMAND INPUT */
         .input-box {
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
             border-radius: 50px; padding: 8px 8px 8px 25px; display: flex; align-items: center;
@@ -69,27 +60,18 @@
         #micBtn.active { background: var(--neon-pink); box-shadow: 0 0 25px var(--neon-pink); transform: scale(1.1); }
 
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        
-        @media (max-width: 768px) {
-            #main-wrapper { flex-direction: column; }
-            #ui-side { width: 100%; height: 55%; padding: 25px; }
-            #canvas-container { height: 45%; }
-        }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
         <div class="glass-card">
-            <div style="font-size: 50px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--neon-cyan));">⚛️</div>
-            <h1 style="letter-spacing: 8px; font-weight: 200; margin-bottom: 10px;">ZEN_CORE</h1>
-            <p style="color: #555; font-size: 11px; margin-bottom: 45px; letter-spacing: 3px;">ENCRYPTED_ACCESS_ONLY</p>
-            
+            <h1 style="letter-spacing: 8px; font-weight: 200; margin-bottom: 40px;">ZEN_CORE</h1>
             <div id="g_id_onload"
                  data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com"
                  data-callback="onSignIn">
             </div>
-            <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill" data-width="280"></div>
+            <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
         </div>
     </div>
 
@@ -97,12 +79,10 @@
         <div id="canvas-container"></div>
         <div id="ui-side">
             <h1 class="brand-name">AHAM<span>ZEN</span></h1>
-            <p id="user-display" style="font-size: 10px; color: #444; letter-spacing: 2px;">SECURE_SESSION // ...</p>
-            
+            <p id="user-display" style="font-size: 10px; color: #444; letter-spacing: 2px;">SECURE_SESSION</p>
             <div id="chat-area"></div>
-            
             <div class="input-box">
-                <input type="text" id="userInput" placeholder="Enter voice command..." onkeypress="if(event.key==='Enter') send()">
+                <input type="text" id="userInput" placeholder="Neural command..." onkeypress="if(event.key==='Enter') send()">
                 <button id="micBtn" onclick="toggleMic()">🎤</button>
             </div>
         </div>
@@ -110,31 +90,22 @@
 
     <script>
         let isListening = false;
+        let isThinking = false;
         let userEmail = "";
         let userName = "";
 
-        // --- GOOGLE SIGN-IN ---
         function onSignIn(response) {
             const payload = JSON.parse(atob(response.credential.split('.')[1]));
             userEmail = payload.email;
-            userName = payload.given_name;
-
+            userName = payload.given_name || "COMMANDER";
             document.getElementById('user-display').innerText = `SECURE_SESSION // ${userEmail.toUpperCase()}`;
-            
-            const auth = document.getElementById('auth-screen');
-            auth.style.transform = 'scale(1.2) translateY(-100%)';
-            auth.style.opacity = '0';
-            
-            setTimeout(() => {
-                auth.style.display = 'none';
-                const main = document.getElementById('main-wrapper');
-                main.style.display = 'flex';
-                setTimeout(() => { main.style.opacity = '1'; init3D(); }, 100);
-            }, 1000);
+            document.getElementById('auth-screen').style.transform = 'translateY(-100%)';
+            document.getElementById('main-wrapper').style.display = 'flex';
+            setTimeout(() => { document.getElementById('main-wrapper').style.opacity = '1'; init3D(); }, 500);
         }
 
-        // --- 3D NEURAL SPHERE ---
-        let scene, camera, renderer, sphere, geo, originalPos;
+        // --- DUST SPHERE 3D ENGINE ---
+        let scene, camera, renderer, dustPoints;
         function init3D() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
@@ -143,59 +114,76 @@
             renderer.setSize(container.clientWidth, container.clientHeight);
             container.appendChild(renderer.domElement);
 
-            geo = new THREE.IcosahedronGeometry(2, 35);
-            const mat = new THREE.PointsMaterial({ size: 0.012, color: 0x00ffff, transparent: true, opacity: 0.7 });
-            sphere = new THREE.Points(geo, mat);
-            scene.add(sphere);
-            camera.position.z = 5;
-            originalPos = geo.attributes.position.array.slice();
+            const particleCount = 18000; // Increased density
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(particleCount * 3);
+
+            for(let i = 0; i < particleCount * 3; i+=3) {
+                const r = 2.5 + (Math.random() * 0.2); // Slight variance in radius for "depth"
+                const phi = Math.acos(-1 + (2 * (i/3)) / particleCount);
+                const theta = Math.sqrt(particleCount * Math.PI) * phi;
+                pos[i] = r * Math.cos(theta) * Math.sin(phi);
+                pos[i+1] = r * Math.sin(theta) * Math.sin(phi);
+                pos[i+2] = r * Math.cos(phi);
+            }
+
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const mat = new THREE.PointsMaterial({ 
+                size: 0.012, 
+                color: 0x00ffff, 
+                transparent: true, 
+                opacity: 0.7, 
+                blending: THREE.AdditiveBlending 
+            });
+            dustPoints = new THREE.Points(geo, mat);
+            scene.add(dustPoints);
+            camera.position.z = 6;
             animate();
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            const pos = geo.attributes.position.array;
-            const t = Date.now() * 0.002;
-            let intensity = isListening ? 0.4 : 0.1;
+            const time = Date.now() * 0.001;
+            dustPoints.rotation.y += 0.0015;
+            dustPoints.rotation.x += 0.0005;
+
+            // Color Transition Logic
+            const targetColor = isThinking ? new THREE.Color(0xff00ff) : new THREE.Color(0x00ffff);
+            dustPoints.material.color.lerp(targetColor, 0.05);
             
-            for (let i = 0; i < pos.length; i += 3) {
-                const x = originalPos[i], y = originalPos[i+1], z = originalPos[i+2];
-                const wave = Math.sin(t + x * 1.5 + y * 1.5) * intensity;
-                pos[i] = x * (1 + wave);
-                pos[i+1] = y * (1 + wave);
-                pos[i+2] = z * (1 + wave);
+            const pos = dustPoints.geometry.attributes.position.array;
+            for(let i = 0; i < pos.length; i+=3) {
+                const dist = Math.sqrt(pos[i]**2 + pos[i+1]**2 + pos[i+2]**2);
+                const wave = Math.sin(time * 2 + dist * 2) * (isListening || isThinking ? 0.04 : 0.008);
+                pos[i] *= (1 + wave);
+                pos[i+1] *= (1 + wave);
+                pos[i+2] *= (1 + wave);
             }
-            geo.attributes.position.needsUpdate = true;
-            sphere.rotation.y += 0.001;
+            dustPoints.geometry.attributes.position.needsUpdate = true;
             renderer.render(scene, camera);
         }
 
-        // --- COMMUNICATION HUB ---
+        // --- LOGIC & VOICE ---
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         function toggleMic() {
             if(!isListening) {
-                isListening = true; document.getElementById('micBtn').classList.add('active');
-                recognition.start();
+                isListening = true; document.getElementById('micBtn').classList.add('active'); recognition.start();
             } else {
-                isListening = false; document.getElementById('micBtn').classList.remove('active');
-                recognition.stop();
+                isListening = false; document.getElementById('micBtn').classList.remove('active'); recognition.stop();
             }
         }
-        recognition.onresult = (e) => { 
-            document.getElementById('userInput').value = e.results[0][0].transcript; 
-            send(); 
-            toggleMic(); 
-        };
+        recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); isListening = false; document.getElementById('micBtn').classList.remove('active'); };
 
         async function send() {
             const input = document.getElementById('userInput');
             const msg = input.value.trim(); if(!msg) return;
             input.value = '';
+            isThinking = true;
 
             const chat = document.getElementById('chat-area');
             chat.innerHTML += `<div class="msg"><p class="msg-label" style="color:var(--neon-cyan)">${userName.toUpperCase()}</p><div class="msg-content">${msg}</div></div>`;
             chat.scrollTop = chat.scrollHeight;
-
+            
             try {
                 const res = await fetch('/api/chat', {
                     method: 'POST',
@@ -203,20 +191,21 @@
                     body: JSON.stringify({ message: msg, user_email: userEmail })
                 });
                 const data = await res.json();
+                
                 chat.innerHTML += `<div class="msg"><p class="msg-label" style="color:var(--neon-pink)">ZEN_CORE</p><div class="msg-content" style="border-left-color:var(--neon-pink);">${data.response}</div></div>`;
                 chat.scrollTop = chat.scrollHeight;
-                
-                const speech = new SpeechSynthesisUtterance(data.response);
-                speech.pitch = 0.9; speech.rate = 1.1;
-                window.speechSynthesis.speak(speech);
-            } catch (e) { console.error("CORE_TIMEOUT"); }
-        }
 
-        window.addEventListener('resize', () => {
-            const container = document.getElementById('canvas-container');
-            if(renderer) renderer.setSize(container.clientWidth, container.clientHeight);
-            if(camera) { camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); }
-        });
+                const speech = new SpeechSynthesisUtterance(data.response);
+                speech.pitch = 0.85; 
+                speech.rate = 1.0;
+                speech.onend = () => { isThinking = false; };
+                window.speechSynthesis.speak(speech);
+
+            } catch (e) {
+                isThinking = false;
+                chat.innerHTML += `<div class="msg"><p class="msg-label">SYSTEM</p><div class="msg-content">Neural link error. Check Vercel Logs.</div></div>`;
+            }
+        }
     </script>
 </body>
 </html>
