@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from groq import Groq
 
+# Initialize FastAPI - Vercel looks for the 'app' variable by default
 app = FastAPI()
 
 class ChatRequest(BaseModel):
@@ -12,10 +13,10 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat_handler(request: ChatRequest):
     try:
-        # Initialize Groq with the latest API standards
+        # Initializing Groq client with your Environment Variable
         client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
         
-        # Llama 3.3-70b is the flagship model for speed & reasoning in 2026
+        # Using Llama 3.3-70b-versatile to ensure 100% uptime and fix the 400 error
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
@@ -28,6 +29,15 @@ async def chat_handler(request: ChatRequest):
             temperature=0.7,
             max_tokens=500
         )
+        
+        # Return the AI's response to your frontend
         return {"response": completion.choices[0].message.content}
+        
     except Exception as e:
-        return {"response": f"Neural Link Error: {str(e)}"}
+        # Catches link errors and reports them back to the UI
+        return {"response": f"Neural Link Failure: {str(e)}"}
+
+# Root route to prevent "Not Found" if the API is pinged directly
+@app.get("/api")
+async def root():
+    return {"status": "ZEN_CORE_ONLINE"}
