@@ -3,130 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AHAM_ZEN // CORE</title>
+    <title>AHAM_ZEN // NEURAL_INTERFACE</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: #000; color: #00ffff; font-family: 'Segoe UI', Roboto, sans-serif; overflow: hidden; display: flex; height: 100vh; flex-direction: row; }
+        :root { --neon-cyan: #00ffff; --neon-pink: #ff00ff; --midnight: #050505; }
+        * { box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--midnight); height: 100vh; overflow: hidden; color: #fff; }
+
+        /* --- STUNNING LOGIN SCREEN --- */
+        #auth-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1), opacity 1s;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px; border-radius: 24px; text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            width: 400px;
+        }
+        .logo-glow {
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
+            margin-bottom: 30px; width: 60px;
+        }
         
-        /* Auto-Adjust for PC vs Phone */
-        #canvas-container { flex: 1; background: #000; position: relative; }
-        #ui-side { width: 380px; background: rgba(5, 5, 10, 0.95); border-left: 1px solid #1a1a1a; display: flex; flex-direction: column; padding: 20px; z-index: 10; transition: 0.3s; }
+        /* --- HIGH-END MAIN UI --- */
+        #main-wrapper { 
+            display: none; opacity: 0; width: 100%; height: 100vh; 
+            background: #000; flex-direction: row; 
+        }
+        #canvas-container { flex: 1; position: relative; background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%); }
         
-        /* Mobile Layout Adjustments */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            #ui-side { width: 100%; height: 50%; border-left: none; border-top: 1px solid #00ffff; padding: 15px; }
-            #canvas-container { height: 50%; }
+        #ui-side { 
+            width: 420px; background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(30px); border-left: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; padding: 35px;
         }
 
-        #chat-area { flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; scroll-behavior: smooth; font-size: 14px; }
-        .msg { margin-bottom: 12px; padding: 10px; border-radius: 8px; background: rgba(0, 255, 255, 0.03); line-height: 1.4; border-left: 2px solid #333; }
-        .sri-name { color: #00ffff; font-weight: bold; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .zen-name { color: #ff88ff; font-weight: bold; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .zen-brand { font-size: 28px; letter-spacing: 8px; font-weight: 200; color: #fff; }
+        .zen-brand span { color: var(--neon-pink); font-weight: 900; text-shadow: 0 0 15px var(--neon-pink); }
         
-        .input-group { display: flex; gap: 8px; align-items: center; background: #0a0a15; padding: 6px 12px; border-radius: 20px; border: 1px solid #00ffff; box-shadow: 0 0 10px rgba(0,255,255,0.1); }
-        input { flex: 1; background: transparent; border: none; color: #fff; padding: 8px; outline: none; font-size: 16px; width: 100%; }
-        #micBtn { background: none; border: 1px solid #ff88ff; color: #ff88ff; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.2s; }
-        #micBtn.active { background: #ff88ff; color: #000; box-shadow: 0 0 15px #ff88ff; }
+        #chat-area { flex: 1; overflow-y: auto; margin: 30px 0; padding-right: 10px; }
+        #chat-area::-webkit-scrollbar { width: 3px; }
+        #chat-area::-webkit-scrollbar-thumb { background: var(--neon-cyan); }
+
+        .msg { margin-bottom: 20px; animation: fadeIn 0.5s ease forwards; }
+        .msg-user { color: var(--neon-cyan); font-size: 10px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; }
+        .msg-text { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 0 15px 15px 15px; font-size: 15px; line-height: 1.6; border: 1px solid rgba(255,255,255,0.05); }
+
+        /* INPUT AREA */
+        .input-box {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px; padding: 5px 5px 5px 20px; display: flex; align-items: center;
+            transition: 0.3s;
+        }
+        .input-box:focus-within { border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0,255,255,0.1); }
+        input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 16px; }
+
+        #micBtn {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: var(--neon-cyan); color: #000; cursor: pointer;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #micBtn.active { background: var(--neon-pink); transform: scale(1.2); box-shadow: 0 0 30px var(--neon-pink); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 768px) {
+            #main-wrapper { flex-direction: column; }
+            #ui-side { width: 100%; height: 50%; }
+        }
     </style>
 </head>
 <body>
-    <div id="canvas-container"></div>
-    <div id="ui-side">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="color:#ff88ff; margin:0; font-weight:300; letter-spacing:2px;">ZEN_CORE</h2>
-            <button onclick="clearMemory()" style="background:none; border:none; color:#444; font-size:10px; cursor:pointer;">CLEAR DATA</button>
+
+    <div id="auth-screen">
+        <div class="glass-card">
+            <div style="font-size: 40px; margin-bottom: 10px;">🌑</div>
+            <h1 style="letter-spacing: 5px; font-weight: 200; margin-bottom: 10px;">CORE_AUTH</h1>
+            <p style="color: #666; font-size: 12px; margin-bottom: 40px; letter-spacing: 2px;">SECURE ACCESS REQUIRED</p>
+            
+            <div id="g_id_onload"
+                 data-client_id="YOUR_CLIENT_ID_HERE.apps.googleusercontent.com"
+                 data-callback="onSignIn">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
         </div>
-        <div id="chat-area"></div>
-        <div class="input-group">
-            <input type="text" id="userInput" placeholder="Talk to ZEN..." onkeypress="if(event.key==='Enter') send()">
-            <button id="micBtn" onclick="toggleMic()">🎤</button>
+    </div>
+
+    <div id="main-wrapper">
+        <div id="canvas-container"></div>
+        <div id="ui-side">
+            <h1 class="zen-brand">AHAM<span>ZEN</span></h1>
+            <p id="user-tag" style="font-size: 10px; color: #444; margin-top: 5px; letter-spacing: 2px;">SESSION_ACTIVE // ...</p>
+            
+            <div id="chat-area"></div>
+            
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Initialize command..." onkeypress="if(event.key==='Enter') send()">
+                <button id="micBtn" onclick="toggleMic()">🎤</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- 1. MEMORY SYSTEM (LocalStorage) ---
-        let userName = localStorage.getItem('user_name') || "Sri";
-        
-        function checkIdentity(text) {
-            if (text.toLowerCase().includes("my name is ")) {
-                userName = text.split("is ")[1];
-                localStorage.setItem('user_name', userName);
-                return true;
-            }
-            return false;
+        let isListening = false;
+        let userEmail = "";
+        let userName = "";
+
+        // --- 1. GOOGLE LOGIN HANDLER ---
+        function onSignIn(response) {
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            userEmail = payload.email;
+            userName = payload.given_name;
+
+            document.getElementById('user-tag').innerText = `SESSION_ACTIVE // ${userEmail.toUpperCase()}`;
+            
+            const auth = document.getElementById('auth-screen');
+            auth.style.transform = 'scale(1.5)';
+            auth.style.opacity = '0';
+            
+            setTimeout(() => {
+                auth.style.display = 'none';
+                const main = document.getElementById('main-wrapper');
+                main.style.display = 'flex';
+                setTimeout(() => { main.style.opacity = '1'; init3D(); }, 100);
+            }, 1000);
         }
 
-        function clearMemory() {
-            localStorage.clear();
-            location.reload();
-        }
-
-        // --- 2. 3D RESPONSIVE SPHERE ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        function handleResize() {
+        // --- 2. 3D "LIQUID NEURON" ENGINE ---
+        let scene, camera, renderer, sphere, geo, originalPos;
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             const container = document.getElementById('canvas-container');
-            const w = container.clientWidth;
-            const h = container.clientHeight;
-            renderer.setSize(w, h);
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-        }
-        window.addEventListener('resize', handleResize);
-        handleResize();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
 
-        const geo = new THREE.IcosahedronGeometry(2, 10);
-        const mat = new THREE.PointsMaterial({ color: 0x00ffff, size: 0.04 });
-        const sphere = new THREE.Points(geo, mat);
-        scene.add(sphere);
-        camera.position.z = 5;
+            geo = new THREE.IcosahedronGeometry(2, 40);
+            const mat = new THREE.PointsMaterial({ size: 0.015, color: 0x00ffff, transparent: true, opacity: 0.6 });
+            sphere = new THREE.Points(geo, mat);
+            scene.add(sphere);
+            camera.position.z = 5;
+            originalPos = geo.attributes.position.array.slice();
+            animate();
+        }
 
         function animate() {
             requestAnimationFrame(animate);
-            sphere.rotation.y += 0.002;
+            const pos = geo.attributes.position.array;
+            const t = Date.now() * 0.0015;
+            for (let i = 0; i < pos.length; i += 3) {
+                const x = originalPos[i], y = originalPos[i+1], z = originalPos[i+2];
+                const wave = Math.sin(t + x * 2 + y * 2) * 0.15;
+                pos[i] = x * (1 + wave);
+                pos[i+1] = y * (1 + wave);
+                pos[i+2] = z * (1 + wave);
+            }
+            geo.attributes.position.needsUpdate = true;
+            sphere.rotation.y += 0.001;
             renderer.render(scene, camera);
         }
-        animate();
 
-        // --- 3. VOICE & CHAT ---
+        // --- 3. SPEECH & CHAT ---
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        function toggleMic() { recognition.start(); }
-        recognition.onstart = () => document.getElementById('micBtn').classList.add('active');
-        recognition.onend = () => document.getElementById('micBtn').classList.remove('active');
-        recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
+        function toggleMic() {
+            if(!isListening) {
+                isListening = true; document.getElementById('micBtn').classList.add('active');
+                recognition.start();
+            } else {
+                isListening = false; document.getElementById('micBtn').classList.remove('active');
+                recognition.stop();
+            }
+        }
+        recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); toggleMic(); };
 
-        let history = [];
         async function send() {
             const input = document.getElementById('userInput');
-            const chat = document.getElementById('chat-area');
             const msg = input.value.trim(); if(!msg) return;
             input.value = '';
 
-            checkIdentity(msg); // Check if they told ZEN their name
-
-            chat.innerHTML += `<div class="msg"><span class="sri-name">${userName}</span>${msg}</div>`;
+            const chat = document.getElementById('chat-area');
+            chat.innerHTML += `<div class="msg"><p class="msg-user">${userName.toUpperCase()}</p><div class="msg-text">${msg}</div></div>`;
             chat.scrollTop = chat.scrollHeight;
 
             try {
                 const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: `(User name is ${userName}) ${msg}`, history: history })
+                    body: JSON.stringify({ message: msg, user_email: userEmail })
                 });
                 const data = await res.json();
-                chat.innerHTML += `<div class="msg"><span class="zen-name">ZEN</span>${data.response}</div>`;
+                chat.innerHTML += `<div class="msg"><p class="msg-user" style="color:#ff00ff">ZEN_CORE</p><div class="msg-text" style="border-color:#ff00ff22">${data.response}</div></div>`;
                 chat.scrollTop = chat.scrollHeight;
-                history.push({role:"user", content:msg}, {role:"assistant", content:data.response});
-                
-                const voice = new SpeechSynthesisUtterance(data.response);
-                voice.pitch = 1.3;
-                window.speechSynthesis.speak(voice);
-            } catch (e) { console.error(e); }
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(data.response));
+            } catch (e) {}
         }
     </script>
 </body>
