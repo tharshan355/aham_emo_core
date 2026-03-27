@@ -6,136 +6,34 @@
     <title>AHAM_ZEN // CORE</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
     <style>
-        :root { 
-            --cyan: #00ffff; 
-            --pink: #ff00ff; 
-            --dark: #050505; 
-            --glass: rgba(255, 255, 255, 0.03);
-        }
-
-        body { 
-            margin: 0; 
-            background: var(--dark); 
-            color: white; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            overflow: hidden; 
-        }
-
-        /* Authentication Overlay */
-        #auth-screen { 
-            position: fixed; 
-            inset: 0; 
-            z-index: 100; 
-            background: #000; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            transition: opacity 1s;
-        }
-
-        /* Main Layout */
-        #main-ui { 
-            display: none; 
-            height: 100vh; 
-            flex-direction: row; 
-        }
-
-        #canvas-box { 
-            flex: 1; 
-            background: #000; 
-            cursor: crosshair;
-        }
-
-        /* Side Panel Aesthetic */
-        #side-panel { 
-            width: 400px; 
-            background: rgba(5, 5, 5, 0.98); 
-            border-left: 1px solid #222; 
-            display: flex; 
-            flex-direction: column; 
-            padding: 30px;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-        }
-
-        .brand { 
-            font-size: 24px; 
-            letter-spacing: 8px; 
-            margin-bottom: 5px; 
-            text-align: center; 
-            text-transform: uppercase;
-        }
-
-        .brand span { color: var(--pink); font-weight: bold; text-shadow: 0 0 10px var(--pink); }
+        :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; }
+        #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
+        #canvas-box { flex: 1; background: #000; }
+        #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
         
-        .session-info {
-            font-size: 10px;
-            color: #555;
-            text-align: center;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
+        @media (max-width: 800px) {
+            #main-ui { flex-direction: column; }
+            #side-panel { width: 100%; height: 40%; border-left: none; border-top: 1px solid #222; }
         }
 
-        /* Chat Logic */
-        #chat { 
-            flex: 1; 
-            overflow-y: auto; 
-            margin-bottom: 20px; 
-            padding-right: 10px;
-        }
-
-        #chat::-webkit-scrollbar { width: 4px; }
-        #chat::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-
-        .msg { 
-            margin-bottom: 15px; 
-            padding: 12px 16px; 
-            border-radius: 12px; 
-            background: var(--glass); 
-            border-left: 3px solid var(--cyan);
-            font-size: 14px;
-            line-height: 1.5;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .zen-msg { border-left-color: var(--pink); background: rgba(255, 0, 255, 0.02); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Input Field */
-        .input-area { 
-            display: flex; 
-            background: #111; 
-            border-radius: 30px; 
-            padding: 5px 20px; 
-            border: 1px solid #333;
-            align-items: center;
-            transition: 0.3s;
-        }
-
-        .input-area:focus-within { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 255, 255, 0.1); }
-
-        input { 
-            background: none; 
-            border: none; 
-            color: white; 
-            flex: 1; 
-            padding: 12px 5px; 
-            outline: none; 
-            font-size: 14px;
-        }
+        .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; }
+        .brand span { color: var(--pink); font-weight: bold; }
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); font-size: 14px; }
+        .zen-msg { border-left-color: var(--pink); }
+        .input-area { display: flex; background: #111; border-radius: 25px; padding: 5px 15px; border: 1px solid #333; }
+        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
     </style>
 </head>
 <body>
-
     <div id="auth-screen">
         <div style="text-align:center">
-            <h2 style="letter-spacing:10px; margin-bottom:40px;">ZEN_CORE</h2>
-            <div id="g_id_onload" 
-                 data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com" 
-                 data-callback="handleLogin">
-            </div>
+            <h2 style="letter-spacing:5px">ZEN_CORE</h2>
+            <div id="g_id_onload" data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com" data-callback="handleLogin"></div>
             <div class="g_id_signin" data-type="standard"></div>
         </div>
     </div>
@@ -144,141 +42,102 @@
         <div id="canvas-box"></div>
         <div id="side-panel">
             <div class="brand">AHAM<span>ZEN</span></div>
-            <div class="session-info" id="user-display">SECURE_SESSION // LOADING...</div>
-            
-            <div id="chat">
-                <div class="msg zen-msg">Core initialized. Awaiting commands, Commander Sri.</div>
-            </div>
-
+            <div id="chat"></div>
             <div class="input-area">
-                <input type="text" id="userInput" placeholder="Neural command..." onkeypress="if(event.key==='Enter') send()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--cyan)" style="cursor:pointer" onclick="send()">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                </svg>
+                <input type="text" id="userInput" placeholder="Command Sri..." onkeypress="if(event.key==='Enter') send()">
             </div>
         </div>
     </div>
 
     <script>
-        let user_email = "";
-        let isThinking = false;
+        let user_email = "", isThinking = false;
         let scene, camera, renderer, dust, originalPositions;
 
         function handleLogin(response) {
             const data = JSON.parse(atob(response.credential.split('.')[1]));
             user_email = data.email;
-            document.getElementById('user-display').innerText = `SECURE_SESSION // ${user_email.toUpperCase()}`;
-            document.getElementById('auth-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('main-ui').style.display = 'flex';
-                initSphere();
-            }, 1000);
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'flex';
+            initSphere();
+            speak("System online. Hello Sri.");
+        }
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 0.9;
+            msg.pitch = 0.8;
+            window.speechSynthesis.speak(msg);
         }
 
         function initSphere() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(55, (window.innerWidth - 400) / window.innerHeight, 0.1, 1000);
-            
+            const box = document.getElementById('canvas-box');
+            camera = new THREE.PerspectiveCamera(50, box.clientWidth / box.clientHeight, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth - 400, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById('canvas-box').appendChild(renderer.domElement);
+            renderer.setSize(box.clientWidth, box.clientHeight);
+            box.appendChild(renderer.domElement);
+
+            // AUTO-ADJUST SIZE ON WINDOW RESIZE
+            window.addEventListener('resize', () => {
+                camera.aspect = box.clientWidth / box.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(box.clientWidth, box.clientHeight);
+            });
 
             const count = 15000;
             const geo = new THREE.BufferGeometry();
             const verts = new Float32Array(count * 3);
             originalPositions = new Float32Array(count * 3);
 
-            // Mathematical Golden Spiral for a perfect sphere
-            for(let i = 0; i < count; i++) {
+            for(let i=0; i<count; i++) {
                 const y = 1 - (i / (count - 1)) * 2;
-                const radiusAtY = Math.sqrt(1 - y * y);
+                const rAtY = Math.sqrt(1 - y * y);
                 const theta = 2.399963229728653 * i; 
-                
-                const x = Math.cos(theta) * radiusAtY * 2.5;
-                const z = Math.sin(theta) * radiusAtY * 2.5;
-                const py = y * 2.5;
-
-                verts[i*3] = x;
-                verts[i*3+1] = py;
-                verts[i*3+2] = z;
-                originalPositions.set([x, py, z], i*3);
+                verts[i*3] = Math.cos(theta) * rAtY * 2.5;
+                verts[i*3+1] = y * 2.5;
+                verts[i*3+2] = Math.sin(theta) * rAtY * 2.5;
+                originalPositions.set([verts[i*3], verts[i*3+1], verts[i*3+2]], i*3);
             }
 
             geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-            const material = new THREE.PointsMaterial({ 
-                size: 0.018, 
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.8
-            });
-
-            dust = new THREE.Points(geo, material);
+            dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.015, color: 0x00ffff }));
             scene.add(dust);
             camera.position.z = 7;
-
-            window.addEventListener('resize', () => {
-                camera.aspect = (window.innerWidth - 400) / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth - 400, window.innerHeight);
-            });
-
             animate();
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            
-            // The 1cm "Breathing" Pulse Logic
-            const time = Date.now() * 0.002;
-            const breath = 1 + (Math.sin(time) * 0.015); 
-            
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * 0.015); 
             const pos = dust.geometry.attributes.position.array;
-            for(let i = 0; i < pos.length; i++) {
-                pos[i] = originalPositions[i] * breath;
-            }
-            
+            for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
-            dust.rotation.y += 0.001;
-            
-            // Color Shift when thinking
-            const targetColor = new THREE.Color(isThinking ? 0xff00ff : 0x00ffff);
-            dust.material.color.lerp(targetColor, 0.05);
-
+            dust.material.color.lerp(new THREE.Color(isThinking ? 0xff00ff : 0x00ffff), 0.1);
             renderer.render(scene, camera);
         }
 
         async function send() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if(!text || isThinking) return;
-
-            input.value = "";
-            const chat = document.getElementById('chat');
-            chat.innerHTML += `<div class="msg">SRI: ${text}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-            
+            const text = document.getElementById('userInput').value;
+            if(!text) return;
+            document.getElementById('userInput').value = "";
+            document.getElementById('chat').innerHTML += `<div class="msg">SRI: ${text}</div>`;
             isThinking = true;
 
             try {
-                // FIXED FETCH: Uses current origin to prevent 404 on preview URLs
-                const response = await fetch(`${window.location.origin}/api/chat`, {
+                const res = await fetch(`${window.location.origin}/api/chat`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ message: text, user_email: user_email })
                 });
-
-                if (!response.ok) throw new Error('Grid Offline');
-
-                const data = await response.json();
-                chat.innerHTML += `<div class="msg zen-msg">ZEN: ${data.response}</div>`;
-            } catch (err) {
-                chat.innerHTML += `<div class="msg" style="color:var(--pink)">CRITICAL_ERROR: Connection to the neural grid lost.</div>`;
-            } finally {
-                isThinking = false;
-                chat.scrollTop = chat.scrollHeight;
+                const data = await res.json();
+                document.getElementById('chat').innerHTML += `<div class="msg zen-msg">ZEN: ${data.response}</div>`;
+                speak(data.response);
+            } catch(e) {
+                document.getElementById('chat').innerHTML += `<div class="msg" style="color:red">Link Error.</div>`;
             }
+            isThinking = false;
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         }
     </script>
 </body>
