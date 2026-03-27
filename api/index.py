@@ -12,13 +12,13 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat_handler(request: ChatRequest):
     try:
-        # Ensure GROQ_API_KEY is set in Vercel Environment Variables
+        # This pulls the key from your Vercel Dashboard Environment Variables
         client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
         
         completion = client.chat.completions.create(
             model="mixtral-8x7b-32768",
             messages=[
-                {"role": "system", "content": "You are AHAM_ZEN. You are serious, emotional, and witty. Address the user as Commander Sri."},
+                {"role": "system", "content": "You are ZEN. Serious, emotional, and witty. Address the user as Commander Sri."},
                 {"role": "user", "content": request.message}
             ],
             temperature=0.7
