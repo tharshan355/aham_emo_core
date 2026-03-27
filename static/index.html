@@ -15,10 +15,7 @@
         #canvas-box { flex: 1; background: #000; }
         #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
         
-        @media (max-width: 800px) {
-            #main-ui { flex-direction: column; }
-            #side-panel { width: 100%; height: 45%; border-left: none; border-top: 1px solid #222; }
-        }
+        @media (max-width: 800px) { #main-ui { flex-direction: column; } #side-panel { width: 100%; height: 45%; border-left: none; border-top: 1px solid #222; } }
 
         .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; }
         .brand span { color: var(--pink); font-weight: bold; }
@@ -146,7 +143,7 @@
             isThinking = true;
 
             try {
-                const res = await fetch(`${window.location.origin}/api/chat`, {
+                const res = await fetch(`/api/chat`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ message: text, user_email: user_email })
