@@ -8,14 +8,14 @@
     <style>
         :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; }
         body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; transition: 1s; }
+        #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; }
         #main-ui { display: none; height: 100vh; flex-direction: row; }
         #canvas-box { flex: 1; background: #000; }
         #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 30px; }
         .brand { font-size: 24px; letter-spacing: 8px; margin-bottom: 20px; text-align: center; }
         .brand span { color: var(--pink); font-weight: bold; }
         #chat { flex: 1; overflow-y: auto; margin-bottom: 20px; }
-        .msg { margin-bottom: 15px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); font-size: 14px; }
+        .msg { margin-bottom: 15px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); }
         .zen-msg { border-left-color: var(--pink); }
         .input-area { display: flex; background: #111; border-radius: 30px; padding: 5px 15px; border: 1px solid #333; }
         input { background: none; border: none; color: white; flex: 1; padding: 10px; outline: none; }
@@ -68,11 +68,11 @@
 
             for(let i=0; i<count; i++) {
                 const y = 1 - (i / (count - 1)) * 2;
-                const radiusAtY = Math.sqrt(1 - y * y);
+                const rAtY = Math.sqrt(1 - y * y);
                 const theta = 2.399963229728653 * i; 
-                verts[i*3] = Math.cos(theta) * radiusAtY * 2.5;
+                verts[i*3] = Math.cos(theta) * rAtY * 2.5;
                 verts[i*3+1] = y * 2.5;
-                verts[i*3+2] = Math.sin(theta) * radiusAtY * 2.5;
+                verts[i*3+2] = Math.sin(theta) * rAtY * 2.5;
                 originalPositions.set([verts[i*3], verts[i*3+1], verts[i*3+2]], i*3);
             }
 
@@ -100,18 +100,14 @@
             document.getElementById('chat').innerHTML += `<div class="msg">SRI: ${text}</div>`;
             isThinking = true;
 
-            try {
-                const res = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: text, user_email: user_email })
-                });
-                const data = await res.json();
-                document.getElementById('chat').innerHTML += `<div class="msg zen-msg">ZEN: ${data.response}</div>`;
-            } catch(e) {
-                document.getElementById('chat').innerHTML += `<div class="msg" style="color:red">Connection lost. Check Vercel logs.</div>`;
-            }
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: text, user_email: user_email })
+            });
+            const data = await res.json();
             isThinking = false;
+            document.getElementById('chat').innerHTML += `<div class="msg zen-msg">ZEN: ${data.response}</div>`;
         }
     </script>
 </body>
