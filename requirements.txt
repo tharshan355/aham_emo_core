@@ -1,5 +1,4 @@
 fastapi
 uvicorn
-requests
+groq
 pydantic
-aiofiles
