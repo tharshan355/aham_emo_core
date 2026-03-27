@@ -1,20 +1,20 @@
 import os
-import json
 import requests
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List
 
 app = FastAPI()
 
 # --- THE ZEN PERSONALITY ---
-# This makes the AI serious, emotional, and funny as you requested.
 SYSTEM_PROMPT = """
 You are AHAM_ZEN, a high-end neural interface. 
 Your personality: 
-1. Serious about technical tasks.
+1. Serious and precise with technical tasks.
 2. Deeply emotional and empathetic when the user shares feelings.
-3. Witty and sharp with a touch of dark 'Midnight' humor.
+3. Witty and sharp with a touch of 'Midnight' dark humor.
 4. Always address the user as 'Commander' or by their name.
 """
 
@@ -23,23 +23,20 @@ class ChatRequest(BaseModel):
     user_email: str
     history: List[dict] = []
 
+# --- 1. THE AI BRAIN (POST REQUEST) ---
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     user_input = request.message
     email = request.user_email
     user_name = email.split('@')[0].upper()
 
-    # 1. Prepare the Messages for the AI
+    # Prepare messages for Groq
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    
-    # Add history so ZEN remembers the conversation
-    for msg in request.history[-5:]: # Keep last 5 messages for memory
+    for msg in request.history[-5:]:
         messages.append(msg)
-        
     messages.append({"role": "user", "content": user_input})
 
-    # 2. Connect to the Brain (Using Groq for Speed)
-    # Make sure to add your GROQ_API_KEY in Vercel Settings!
+    # Get Key from Vercel Environment Variables
     api_key = os.getenv("GROQ_API_KEY") 
     
     try:
@@ -49,23 +46,32 @@ async def chat(request: ChatRequest):
             json={
                 "model": "mixtral-8x7b-32768",
                 "messages": messages,
-                "temperature": 0.7 # Makes it more "human/emotional"
+                "temperature": 0.8
             }
         )
         data = response.json()
         bot_response = data['choices'][0]['message']['content']
     except Exception as e:
-        print(f"Error: {e}")
-        bot_response = f"Core Error, {user_name}. My neural pathways are currently obstructed. Please standby."
-
-    # 3. Log the interaction to the console
-    print(f"--- LOG --- USER: {email} | MSG: {user_input} | RESPONSE: {bot_response[:30]}...")
+        print(f"ERROR: {e}")
+        bot_response = f"System error, {user_name}. Connection to the neural grid lost."
 
     return {
         "response": bot_response,
         "status": "success",
         "user": user_name
     }
+
+# --- 2. THE FIX FOR "NOT FOUND" (ROOT ROUTE) ---
+# This serves the HTML whenever someone visits your main link
+@app.get("/")
+async def read_index():
+    # Looks for 'static/index.html' in your folder structure
+    return FileResponse(os.path.join('static', 'index.html'))
+
+# --- 3. THE STATIC MOUNT ---
+# This ensures images, CSS, or JS inside the 'static' folder can be seen
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/api/health")
 async def health():
