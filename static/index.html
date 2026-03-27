@@ -3,63 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHAM_ZEN // NEURAL_CORE</title>
+    <title>AHAM_ZEN // CORE</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; --accent: #111; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
-        
-        #auth-screen { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; }
         #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
+        #canvas-box { flex: 1; background: #000; }
+        #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
         
-        /* 3D Visualizer Area */
-        #canvas-container { flex: 1; position: relative; background: radial-gradient(circle, #0a0a0a 0%, #000 100%); }
-        
-        /* Control Panel */
-        #side-panel { width: 420px; background: rgba(5,5,5,0.95); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 25px; backdrop-filter: blur(10px); }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #1a1a1a; padding-bottom: 15px; }
-        .brand { font-size: 22px; letter-spacing: 8px; text-transform: uppercase; }
-        .brand span { color: var(--pink); font-weight: bold; text-shadow: 0 0 15px var(--pink); }
-        .status-pill { font-size: 9px; padding: 4px 8px; border: 1px solid #333; color: #666; letter-spacing: 1px; }
+        @media (max-width: 800px) {
+            #main-ui { flex-direction: column; }
+            #side-panel { width: 100%; height: 45%; border-left: none; border-top: 1px solid #222; }
+        }
 
-        #chat-flow { flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; }
-        .bubble { margin-bottom: 15px; padding: 12px 16px; border-radius: 4px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.4s ease; border-left: 2px solid var(--cyan); background: rgba(255,255,255,0.02); }
-        .zen-bubble { border-left-color: var(--pink); background: rgba(255, 0, 255, 0.02); }
-
-        /* Modern Input Console */
-        .console-wrap { background: var(--accent); border: 1px solid #222; border-radius: 4px; display: flex; align-items: center; padding: 5px 15px; transition: 0.3s; }
-        .console-wrap:focus-within { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 255, 255, 0.1); }
-        input { background: none; border: none; color: white; flex: 1; padding: 12px; outline: none; font-size: 14px; }
+        .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; }
+        .brand span { color: var(--pink); font-weight: bold; }
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); font-size: 14px; }
+        .zen-msg { border-left-color: var(--pink); }
         
-        .btn { background: none; border: none; color: #444; cursor: pointer; padding: 8px; transition: 0.2s; display: flex; align-items: center; }
-        .btn:hover { color: var(--cyan); }
-        .mic-on { color: var(--pink) !important; filter: drop-shadow(0 0 5px var(--pink)); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 900px) { #main-ui { flex-direction: column; } #side-panel { width: 100%; height: 50%; border-left: none; border-top: 1px solid #222; } }
+        .input-area { display: flex; background: #111; border-radius: 25px; padding: 5px 15px; border: 1px solid #333; align-items: center; }
+        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
+        
+        .mic-btn { background: none; border: none; color: #444; cursor: pointer; padding: 5px; transition: 0.3s; }
+        .mic-btn.active { color: var(--pink); filter: drop-shadow(0 0 5px var(--pink)); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="auth-screen">
-        <h1 style="letter-spacing:15px; margin-bottom:30px">AHAM_ZEN</h1>
-        <div id="g_id_onload" data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com" data-callback="handleAuth"></div>
-        <div class="g_id_signin" data-type="standard"></div>
+        <div style="text-align:center">
+            <h2 style="letter-spacing:5px">ZEN_CORE</h2>
+            <div id="g_id_onload" data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com" data-callback="handleLogin"></div>
+            <div class="g_id_signin" data-type="standard"></div>
+        </div>
     </div>
 
     <div id="main-ui">
-        <div id="canvas-container"></div>
+        <div id="canvas-box"></div>
         <div id="side-panel">
-            <div class="header">
-                <div class="brand">AHAM<span>ZEN</span></div>
-                <div class="status-pill" id="latency">LATENCY: --</div>
-            </div>
-            <div id="chat-flow"></div>
-            <div class="console-wrap">
-                <input type="text" id="userInput" placeholder="Type or use voice..." spellcheck="true" autocomplete="off" onkeypress="if(event.key==='Enter') transmit()">
-                <button class="btn" id="micBtn" onclick="toggleVoice()">
+            <div class="brand">AHAM<span>ZEN</span></div>
+            <div id="chat"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Command Sri..." onkeypress="if(event.key==='Enter') send()">
+                <button class="mic-btn" id="micBtn" onclick="toggleVoice()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                 </button>
             </div>
@@ -67,117 +58,107 @@
     </div>
 
     <script>
-        let user_email = "", isProcessing = false, rec;
-        let scene, camera, renderer, globe, baseVerts;
+        let user_email = "", isThinking = false, recognition;
+        let scene, camera, renderer, dust, originalPositions;
 
-        function handleAuth(resp) {
-            const user = JSON.parse(atob(resp.credential.split('.')[1]));
-            user_email = user.email;
+        function handleLogin(response) {
+            const data = JSON.parse(atob(response.credential.split('.')[1]));
+            user_email = data.email;
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
-            initEngine();
-            initSpeech();
-            vocalize("Neural link established. Hello Sri.");
+            initSphere();
+            setupVoice();
+            speak("System online. Hello Sri.");
         }
 
-        function initSpeech() {
+        function setupVoice() {
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (window.SpeechRecognition) {
-                rec = new SpeechRecognition();
-                rec.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; transmit(); };
-                rec.onend = () => document.getElementById('micBtn').classList.remove('mic-on');
+                recognition = new SpeechRecognition();
+                recognition.onresult = (e) => { 
+                    document.getElementById('userInput').value = e.results[0][0].transcript; 
+                    send(); 
+                };
+                recognition.onend = () => document.getElementById('micBtn').classList.remove('active');
             }
         }
 
         function toggleVoice() {
-            if (!rec) return alert("Browser does not support Speech Recognition.");
-            document.getElementById('micBtn').classList.add('mic-on');
-            rec.start();
+            if (!recognition) return alert("Mic not supported.");
+            document.getElementById('micBtn').classList.add('active');
+            recognition.start();
         }
 
-        function vocalize(text) {
+        function speak(text) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9; utterance.pitch = 0.85;
-            window.speechSynthesis.speak(utterance);
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 0.95; msg.pitch = 0.85;
+            window.speechSynthesis.speak(msg);
         }
 
-        function initEngine() {
+        function initSphere() {
             scene = new THREE.Scene();
-            const container = document.getElementById('canvas-container');
-            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const box = document.getElementById('canvas-box');
+            camera = new THREE.PerspectiveCamera(50, box.clientWidth / box.clientHeight, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            container.appendChild(renderer.domElement);
+            renderer.setSize(box.clientWidth, box.clientHeight);
+            box.appendChild(renderer.domElement);
 
-            window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            });
-
-            // Creating the Liquid-style High-Density Particle Sphere
-            const count = 20000;
+            const count = 15000;
             const geo = new THREE.BufferGeometry();
-            const pos = new Float32Array(count * 3);
-            baseVerts = new Float32Array(count * 3);
+            const verts = new Float32Array(count * 3);
+            originalPositions = new Float32Array(count * 3);
 
             for(let i=0; i<count; i++) {
-                const phi = Math.acos(-1 + (2 * i) / count);
-                const theta = Math.sqrt(count * Math.PI) * phi;
-                pos[i*3] = Math.cos(theta) * Math.sin(phi) * 2.5;
-                pos[i*3+1] = Math.sin(theta) * Math.sin(phi) * 2.5;
-                pos[i*3+2] = Math.cos(phi) * 2.5;
-                baseVerts.set([pos[i*3], pos[i*3+1], pos[i*3+2]], i*3);
+                const y = 1 - (i / (count - 1)) * 2;
+                const rAtY = Math.sqrt(1 - y * y);
+                const theta = 2.399963229728653 * i; 
+                verts[i*3] = Math.cos(theta) * rAtY * 2.5;
+                verts[i*3+1] = y * 2.5;
+                verts[i*3+2] = Math.sin(theta) * rAtY * 2.5;
+                originalPositions.set([verts[i*3], verts[i*3+1], verts[i*3+2]], i*3);
             }
 
-            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            globe = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.01, color: 0x00ffff, transparent: true, opacity: 0.7 }));
-            scene.add(globe);
-            camera.position.z = 8;
-            render();
+            geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+            dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.012, color: 0x00ffff, transparent: true, opacity: 0.8 }));
+            scene.add(dust);
+            camera.position.z = 7;
+            animate();
         }
 
-        function render() {
-            requestAnimationFrame(render);
-            const time = Date.now() * 0.002;
-            const wave = isProcessing ? 0.08 : 0.02;
-            const pulse = 1 + (Math.sin(time) * wave);
-            
-            const points = globe.geometry.attributes.position.array;
-            for(let i=0; i<points.length; i++) points[i] = baseVerts[i] * pulse;
-            
-            globe.geometry.attributes.position.needsUpdate = true;
-            globe.rotation.y += isProcessing ? 0.015 : 0.002;
-            globe.material.color.lerp(new THREE.Color(isProcessing ? 0xff00ff : 0x00ffff), 0.1);
+        function animate() {
+            requestAnimationFrame(animate);
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.05 : 0.015)); 
+            const pos = dust.geometry.attributes.position.array;
+            for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
+            dust.geometry.attributes.position.needsUpdate = true;
+            dust.rotation.y += isThinking ? 0.012 : 0.001;
+            dust.material.color.lerp(new THREE.Color(isThinking ? 0xff00ff : 0x00ffff), 0.1);
             renderer.render(scene, camera);
         }
 
-        async function transmit() {
+        async function send() {
             const input = document.getElementById('userInput');
-            const msg = input.value.trim();
-            if(!msg) return;
+            const text = input.value.trim();
+            if(!text) return;
             input.value = "";
-            document.getElementById('chat-flow').innerHTML += `<div class="bubble">SRI: ${msg}</div>`;
-            isProcessing = true;
+            document.getElementById('chat').innerHTML += `<div class="msg">SRI: ${text}</div>`;
+            isThinking = true;
 
             try {
-                const start = Date.now();
                 const res = await fetch(`${window.location.origin}/api/chat`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: msg, user_email: user_email })
+                    body: JSON.stringify({ message: text, user_email: user_email })
                 });
                 const data = await res.json();
-                document.getElementById('latency').innerText = `LATENCY: ${Date.now() - start}ms`;
-                document.getElementById('chat-flow').innerHTML += `<div class="bubble zen-bubble">ZEN: ${data.response}</div>`;
-                vocalize(data.response);
+                document.getElementById('chat').innerHTML += `<div class="msg zen-msg">ZEN: ${data.response}</div>`;
+                speak(data.response);
             } catch(e) {
-                document.getElementById('chat-flow').innerHTML += `<div class="bubble" style="color:red">CONNECTION ERROR</div>`;
+                document.getElementById('chat').innerHTML += `<div class="msg" style="color:red">Link Error.</div>`;
             }
-            isProcessing = false;
-            const flow = document.getElementById('chat-flow');
-            flow.scrollTop = flow.scrollHeight;
+            isThinking = false;
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         }
     </script>
 </body>
