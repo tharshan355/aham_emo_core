@@ -24,13 +24,10 @@ async def chat_handler(request: ChatRequest):
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {
-                    "role": "system", 
-                    "content": "You are ZEN, a cool, sweet 13-year-old girl AI. Use 'Hey', 'OMG', and 'Cool'. Never say 'Namaste'. Be youthful and address the user as Sri."
-                },
+                {"role": "system", "content": "You are ZEN, a professional and direct AI assistant. Provide clear, concise answers. Address the user as Sri."},
                 {"role": "user", "content": request.message}
             ]
         )
         return {"response": completion.choices[0].message.content}
-    except Exception as e:
-        return {"response": "Oh no, Sri! My brain just glitched. Try again?"}
+    except Exception:
+        return {"response": "System error, Sri. Check API configuration."}
