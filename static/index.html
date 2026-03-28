@@ -37,7 +37,7 @@
             <div id="chat"></div>
             <div class="input-area">
                 <button id="mic-btn" onclick="toggleMic()">🎤</button>
-                <input type="text" id="userInput" placeholder="System ready..." onkeypress="if(event.key==='Enter') sendText()">
+                <input type="text" id="userInput" placeholder="Awaiting command, Sri..." onkeypress="if(event.key==='Enter') sendText()">
             </div>
         </div>
     </div>
@@ -53,7 +53,7 @@
             initSphere();
             
             setTimeout(() => {
-                const msg = "System Online. Welcome back, Sri.";
+                const msg = "Welcome back, Sri. I'm ready to assist you.";
                 document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${msg}</div>`;
                 speak(msg);
             }, 1000);
@@ -91,7 +91,7 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const breath = 1 + (Math.sin(Date.now() * 0.002) * 0.04); 
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.12 : 0.04)); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
@@ -99,20 +99,26 @@
             renderer.render(scene, camera);
         }
 
-        // --- STANDARD NEUTRAL VOICE ---
+        // --- NATURAL FEMALE VOICE ---
         function speak(text) {
             const synth = window.speechSynthesis;
             synth.cancel();
             const utter = new SpeechSynthesisUtterance(text);
             
-            utter.pitch = 1.0; // Standard pitch
-            utter.rate = 1.0;  // Normal speed
+            utter.pitch = 1.05; // Balanced natural female pitch
+            utter.rate = 1.0; 
             utter.lang = 'en-US'; 
             
             const voices = synth.getVoices();
-            // Look for a standard, professional voice
-            const stdVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices[0];
-            utter.voice = stdVoice;
+            // Specifically searches for high-quality English female voices
+            const femaleVoice = voices.find(v => 
+                (v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Female')) 
+                && v.lang.includes('en')
+            );
+            
+            if (femaleVoice) {
+                utter.voice = femaleVoice;
+            }
             
             synth.speak(utter);
         }
