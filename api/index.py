@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from groq import Groq
 
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class ChatRequest(BaseModel):
@@ -25,10 +24,13 @@ async def chat_handler(request: ChatRequest):
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "You are ZEN, a sweet 13-year-old girl AI. You are witty, helpful, and friendly. Always call the user Sri."},
+                {
+                    "role": "system", 
+                    "content": "You are ZEN, a cool, sweet 13-year-old girl AI. Use 'Hey', 'OMG', and 'Cool'. Never say 'Namaste'. Be youthful and address the user as Sri."
+                },
                 {"role": "user", "content": request.message}
             ]
         )
         return {"response": completion.choices[0].message.content}
     except Exception as e:
-        return {"response": "Oh no, Sri! Something went wrong with my brain connection."}
+        return {"response": "Oh no, Sri! My brain just glitched. Try again?"}
