@@ -15,8 +15,8 @@
         #side-panel { width: 350px; background: rgba(10,10,10,0.95); border-left: 1px solid #333; display: flex; flex-direction: column; padding: 20px; }
         .brand { font-size: 22px; letter-spacing: 4px; margin-bottom: 20px; text-align: center; font-weight: bold; color: var(--cyan); }
         .brand span { color: var(--pink); }
-        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; scrollbar-width: none; }
-        .msg { margin-bottom: 12px; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--cyan); font-size: 14px; line-height: 1.4; }
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scrollbar-width: none; }
+        .msg { margin-bottom: 12px; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--cyan); font-size: 14px; }
         .input-area { display: flex; background: #1a1a1a; border-radius: 30px; padding: 8px 15px; border: 1px solid #444; align-items: center; }
         input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; font-size: 14px; }
         #mic-btn { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 20px; transition: 0.3s; padding: 0 10px; }
@@ -51,7 +51,7 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             initSphere();
-            setTimeout(() => { speak("Hi Sri! I'm online and ready to help!"); }, 1000);
+            setTimeout(() => { speak("Hey Sri! I'm back. Let's build something cool!"); }, 1000);
         }
 
         function initSphere() {
@@ -100,7 +100,6 @@
             recognition.lang = 'en-US';
             const btn = document.getElementById('mic-btn');
             recognition.onstart = () => { btn.classList.add('recording'); };
-            recognition.onend = () => { btn.classList.remove('recording'); };
             recognition.onresult = (event) => {
                 document.getElementById('userInput').value = event.results[0][0].transcript;
                 sendText();
@@ -112,15 +111,12 @@
             const synth = window.speechSynthesis;
             synth.cancel();
             const utter = new SpeechSynthesisUtterance(text);
-            
-            // 13-YEAR-OLD GIRL SETTINGS
-            utter.pitch = 1.5; 
+            utter.pitch = 1.4; // Sweet but not squeaky
             utter.rate = 1.0; 
-            
             const voices = synth.getVoices();
-            const softVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female'));
-            if(softVoice) utter.voice = softVoice;
-            
+            // Force US English Female to avoid "Namaste" accent
+            const sweetVoice = voices.find(v => v.lang.includes('en-US') && v.name.includes('Female')) || voices[0];
+            utter.voice = sweetVoice;
             synth.speak(utter);
         }
 
@@ -140,7 +136,6 @@
                 const data = await res.json();
                 document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
                 speak(data.response);
-                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             } catch(e) { console.error(e); }
             isThinking = false;
         }
