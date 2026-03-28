@@ -13,9 +13,9 @@
         #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #canvas-box { flex: 1; background: #000; }
         #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
-        .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; }
-        .brand span { color: var(--pink); font-weight: bold; }
-        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; }
+        .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        .brand span { color: var(--pink); }
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scrollbar-width: none; }
         .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); font-size: 14px; }
         .input-area { display: flex; background: #111; border-radius: 25px; padding: 5px 15px; border: 1px solid #333; }
         input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
@@ -61,8 +61,7 @@
             renderer.setSize(box.clientWidth, box.clientHeight);
             box.appendChild(renderer.domElement);
 
-            // CHANGED: Minimized amount of dust particles to 2,000
-            const count = 2000; 
+            const count = 2000; // MINIMIZED FOR SRI'S i3
             const geo = new THREE.BufferGeometry();
             const verts = new Float32Array(count * 3);
             originalPositions = new Float32Array(count * 3);
@@ -78,7 +77,7 @@
             }
 
             geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-            dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.02, color: 0x00ffff, transparent: true, opacity: 0.9 }));
+            dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.02, color: 0x00ffff, transparent: true, opacity: 0.8 }));
             scene.add(dust);
             camera.position.z = 7;
             animate();
@@ -86,7 +85,7 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.08 : 0.02)); 
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.1 : 0.02)); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
@@ -110,9 +109,9 @@
                 });
                 const data = await res.json();
                 document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
-            } catch(e) {
-                console.error(e);
-            }
+                const chatBox = document.getElementById('chat');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch(e) { console.error(e); }
             isThinking = false;
         }
     </script>
