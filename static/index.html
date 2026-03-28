@@ -12,15 +12,15 @@
         #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #canvas-box { flex: 1; background: #000; cursor: pointer; }
-        #side-panel { width: 350px; background: rgba(10,10,10,0.95); border-left: 1px solid #333; display: flex; flex-direction: column; padding: 20px; }
+        #side-panel { width: 350px; background: rgba(10,10,10,0.98); border-left: 1px solid #333; display: flex; flex-direction: column; padding: 20px; }
         .brand { font-size: 22px; letter-spacing: 4px; margin-bottom: 20px; text-align: center; font-weight: bold; color: var(--cyan); }
         .brand span { color: var(--pink); }
         #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scrollbar-width: none; }
         .msg { margin-bottom: 12px; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--cyan); font-size: 14px; }
         .input-area { display: flex; background: #1a1a1a; border-radius: 30px; padding: 8px 15px; border: 1px solid #444; align-items: center; }
-        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; font-size: 14px; }
-        #mic-btn { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 20px; transition: 0.3s; padding: 0 10px; }
-        #mic-btn.recording { color: var(--pink); text-shadow: 0 0 10px var(--pink); }
+        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
+        #mic-btn { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 20px; padding: 0 10px; }
+        #mic-btn.recording { color: var(--pink); }
     </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
             <div id="chat"></div>
             <div class="input-area">
                 <button id="mic-btn" onclick="toggleMic()">🎤</button>
-                <input type="text" id="userInput" placeholder="Talk to me, Sri..." onkeypress="if(event.key==='Enter') sendText()">
+                <input type="text" id="userInput" placeholder="System ready..." onkeypress="if(event.key==='Enter') sendText()">
             </div>
         </div>
     </div>
@@ -51,7 +51,12 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             initSphere();
-            setTimeout(() => { speak("Hey Sri! I'm back. Let's build something cool!"); }, 1000);
+            
+            setTimeout(() => {
+                const msg = "System Online. Welcome back, Sri.";
+                document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${msg}</div>`;
+                speak(msg);
+            }, 1000);
         }
 
         function initSphere() {
@@ -86,13 +91,30 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const amp = isThinking ? 0.2 : 0.04;
-            const breath = 1 + (Math.sin(Date.now() * 0.002) * amp); 
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * 0.04); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
-            dust.rotation.y += isThinking ? 0.01 : 0.002;
+            dust.rotation.y += 0.002;
             renderer.render(scene, camera);
+        }
+
+        // --- STANDARD NEUTRAL VOICE ---
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            
+            utter.pitch = 1.0; // Standard pitch
+            utter.rate = 1.0;  // Normal speed
+            utter.lang = 'en-US'; 
+            
+            const voices = synth.getVoices();
+            // Look for a standard, professional voice
+            const stdVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices[0];
+            utter.voice = stdVoice;
+            
+            synth.speak(utter);
         }
 
         function toggleMic() {
@@ -100,24 +122,12 @@
             recognition.lang = 'en-US';
             const btn = document.getElementById('mic-btn');
             recognition.onstart = () => { btn.classList.add('recording'); };
+            recognition.onend = () => { btn.classList.remove('recording'); };
             recognition.onresult = (event) => {
                 document.getElementById('userInput').value = event.results[0][0].transcript;
                 sendText();
             };
             recognition.start();
-        }
-
-        function speak(text) {
-            const synth = window.speechSynthesis;
-            synth.cancel();
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.pitch = 1.4; // Sweet but not squeaky
-            utter.rate = 1.0; 
-            const voices = synth.getVoices();
-            // Force US English Female to avoid "Namaste" accent
-            const sweetVoice = voices.find(v => v.lang.includes('en-US') && v.name.includes('Female')) || voices[0];
-            utter.voice = sweetVoice;
-            synth.speak(utter);
         }
 
         async function sendText() {
@@ -136,6 +146,7 @@
                 const data = await res.json();
                 document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
                 speak(data.response);
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             } catch(e) { console.error(e); }
             isThinking = false;
         }
