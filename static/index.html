@@ -8,27 +8,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; }
-        * { box-sizing: border-box; }
         body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
         #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; }
         #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #canvas-box { flex: 1; background: #000; }
         #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
-        
-        @media (max-width: 800px) { #main-ui { flex-direction: column; } #side-panel { width: 100%; height: 45%; border-left: none; border-top: 1px solid #222; } }
-
         .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; }
         .brand span { color: var(--pink); font-weight: bold; }
-        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scroll-behavior: smooth; }
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; }
         .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); font-size: 14px; }
-        .zen-msg { border-left-color: var(--pink); }
-        
-        .input-area { display: flex; background: #111; border-radius: 25px; padding: 5px 15px; border: 1px solid #333; align-items: center; }
+        .input-area { display: flex; background: #111; border-radius: 25px; padding: 5px 15px; border: 1px solid #333; }
         input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
-        
-        .mic-btn { background: none; border: none; color: #444; cursor: pointer; padding: 5px; transition: 0.3s; }
-        .mic-btn.active { color: var(--pink); filter: drop-shadow(0 0 5px var(--pink)); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -47,15 +37,12 @@
             <div id="chat"></div>
             <div class="input-area">
                 <input type="text" id="userInput" placeholder="Command Sri..." onkeypress="if(event.key==='Enter') send()">
-                <button class="mic-btn" id="micBtn" onclick="toggleVoice()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-                </button>
             </div>
         </div>
     </div>
 
     <script>
-        let user_email = "", isThinking = false, recognition;
+        let user_email = "", isThinking = false;
         let scene, camera, renderer, dust, originalPositions;
 
         function handleLogin(response) {
@@ -64,33 +51,6 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             initSphere();
-            setupVoice();
-            speak("System online. Hello Sri.");
-        }
-
-        function setupVoice() {
-            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (window.SpeechRecognition) {
-                recognition = new SpeechRecognition();
-                recognition.onresult = (e) => { 
-                    document.getElementById('userInput').value = e.results[0][0].transcript; 
-                    send(); 
-                };
-                recognition.onend = () => document.getElementById('micBtn').classList.remove('active');
-            }
-        }
-
-        function toggleVoice() {
-            if (!recognition) return alert("Mic not supported.");
-            document.getElementById('micBtn').classList.add('active');
-            recognition.start();
-        }
-
-        function speak(text) {
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.rate = 0.95; msg.pitch = 0.85;
-            window.speechSynthesis.speak(msg);
         }
 
         function initSphere() {
@@ -101,7 +61,8 @@
             renderer.setSize(box.clientWidth, box.clientHeight);
             box.appendChild(renderer.domElement);
 
-            const count = 15000;
+            // CHANGED: Minimized amount of dust particles to 2,000
+            const count = 2000; 
             const geo = new THREE.BufferGeometry();
             const verts = new Float32Array(count * 3);
             originalPositions = new Float32Array(count * 3);
@@ -117,7 +78,7 @@
             }
 
             geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-            dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.012, color: 0x00ffff, transparent: true, opacity: 0.8 }));
+            dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.02, color: 0x00ffff, transparent: true, opacity: 0.9 }));
             scene.add(dust);
             camera.position.z = 7;
             animate();
@@ -125,12 +86,11 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.05 : 0.015)); 
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.08 : 0.02)); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
-            dust.rotation.y += isThinking ? 0.012 : 0.001;
-            dust.material.color.lerp(new THREE.Color(isThinking ? 0xff00ff : 0x00ffff), 0.1);
+            dust.rotation.y += 0.002;
             renderer.render(scene, camera);
         }
 
@@ -149,13 +109,11 @@
                     body: JSON.stringify({ message: text, user_email: user_email })
                 });
                 const data = await res.json();
-                document.getElementById('chat').innerHTML += `<div class="msg zen-msg">ZEN: ${data.response}</div>`;
-                speak(data.response);
+                document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
             } catch(e) {
-                document.getElementById('chat').innerHTML += `<div class="msg" style="color:red">Link Error.</div>`;
+                console.error(e);
             }
             isThinking = false;
-            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         }
     </script>
 </body>
