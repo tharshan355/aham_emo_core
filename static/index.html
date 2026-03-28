@@ -37,7 +37,7 @@
             <div id="chat"></div>
             <div class="input-area">
                 <button id="mic-btn" onclick="toggleMic()">🎤</button>
-                <input type="text" id="userInput" placeholder="Command Sri..." onkeypress="if(event.key==='Enter') sendText()">
+                <input type="text" id="userInput" placeholder="Talk to me, Sri..." onkeypress="if(event.key==='Enter') sendText()">
             </div>
         </div>
     </div>
@@ -51,7 +51,7 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             initSphere();
-            speak("Welcome back, Sri. Systems are online.");
+            setTimeout(() => { speak("Hi Sri! I'm online and ready to help!"); }, 1000);
         }
 
         function initSphere() {
@@ -62,7 +62,7 @@
             renderer.setSize(box.clientWidth, box.clientHeight);
             box.appendChild(renderer.domElement);
 
-            const count = 2000; // FAST FOR i3
+            const count = 2000; 
             const geo = new THREE.BufferGeometry();
             const verts = new Float32Array(count * 3);
             originalPositions = new Float32Array(count * 3);
@@ -86,13 +86,12 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const speed = isThinking ? 0.01 : 0.002;
-            const amp = isThinking ? 0.15 : 0.03;
+            const amp = isThinking ? 0.2 : 0.04;
             const breath = 1 + (Math.sin(Date.now() * 0.002) * amp); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
-            dust.rotation.y += speed;
+            dust.rotation.y += isThinking ? 0.01 : 0.002;
             renderer.render(scene, camera);
         }
 
@@ -113,11 +112,15 @@
             const synth = window.speechSynthesis;
             synth.cancel();
             const utter = new SpeechSynthesisUtterance(text);
-            utter.pitch = 1.2; // SWEET VOICE PITCH
-            utter.rate = 0.95; // SMOOTH SPEED
+            
+            // 13-YEAR-OLD GIRL SETTINGS
+            utter.pitch = 1.5; 
+            utter.rate = 1.0; 
+            
             const voices = synth.getVoices();
-            const sweet = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female'));
-            if(sweet) utter.voice = sweet;
+            const softVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female'));
+            if(softVoice) utter.voice = softVoice;
+            
             synth.speak(utter);
         }
 
@@ -137,8 +140,7 @@
                 const data = await res.json();
                 document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
                 speak(data.response);
-                const chatBox = document.getElementById('chat');
-                chatBox.scrollTop = chatBox.scrollHeight;
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             } catch(e) { console.error(e); }
             isThinking = false;
         }
