@@ -9,25 +9,25 @@
     <style>
         :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; }
         body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
-        #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; }
+        #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
-        #canvas-box { flex: 1; background: #000; }
-        #side-panel { width: 400px; background: rgba(5,5,5,0.98); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
-        .brand { font-size: 20px; letter-spacing: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; }
+        #canvas-box { flex: 1; background: #000; cursor: pointer; }
+        #side-panel { width: 350px; background: rgba(10,10,10,0.95); border-left: 1px solid #333; display: flex; flex-direction: column; padding: 20px; }
+        .brand { font-size: 22px; letter-spacing: 4px; margin-bottom: 20px; text-align: center; font-weight: bold; color: var(--cyan); }
         .brand span { color: var(--pink); }
-        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scrollbar-width: none; }
-        .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--cyan); font-size: 14px; }
-        .input-area { display: flex; background: #111; border-radius: 25px; padding: 5px 15px; border: 1px solid #333; }
-        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; scrollbar-width: none; }
+        .msg { margin-bottom: 12px; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--cyan); font-size: 14px; line-height: 1.4; }
+        .input-area { display: flex; background: #1a1a1a; border-radius: 30px; padding: 8px 15px; border: 1px solid #444; align-items: center; }
+        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; font-size: 14px; }
+        #mic-btn { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 20px; transition: 0.3s; padding: 0 10px; }
+        #mic-btn.recording { color: var(--pink); text-shadow: 0 0 10px var(--pink); }
     </style>
 </head>
 <body>
     <div id="auth-screen">
-        <div style="text-align:center">
-            <h2 style="letter-spacing:5px">ZEN_CORE</h2>
-            <div id="g_id_onload" data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com" data-callback="handleLogin"></div>
-            <div class="g_id_signin" data-type="standard"></div>
-        </div>
+        <h2 style="letter-spacing:8px; margin-bottom:30px;">ZEN_CORE</h2>
+        <div id="g_id_onload" data-client_id="920870736896-tjt9f187s9nmhlvmdirvnknsg5hei88d.apps.googleusercontent.com" data-callback="handleLogin"></div>
+        <div class="g_id_signin" data-type="standard"></div>
     </div>
 
     <div id="main-ui">
@@ -36,14 +36,14 @@
             <div class="brand">AHAM<span>ZEN</span></div>
             <div id="chat"></div>
             <div class="input-area">
-                <input type="text" id="userInput" placeholder="Command Sri..." onkeypress="if(event.key==='Enter') send()">
+                <button id="mic-btn" onclick="toggleMic()">🎤</button>
+                <input type="text" id="userInput" placeholder="Command Sri..." onkeypress="if(event.key==='Enter') sendText()">
             </div>
         </div>
     </div>
 
     <script>
-        let user_email = "", isThinking = false;
-        let scene, camera, renderer, dust, originalPositions;
+        let user_email = "", isThinking = false, scene, camera, renderer, dust, originalPositions;
 
         function handleLogin(response) {
             const data = JSON.parse(atob(response.credential.split('.')[1]));
@@ -51,6 +51,7 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             initSphere();
+            speak("Welcome back, Sri. Systems are online.");
         }
 
         function initSphere() {
@@ -61,7 +62,7 @@
             renderer.setSize(box.clientWidth, box.clientHeight);
             box.appendChild(renderer.domElement);
 
-            const count = 2000; // MINIMIZED FOR SRI'S i3
+            const count = 2000; // FAST FOR i3
             const geo = new THREE.BufferGeometry();
             const verts = new Float32Array(count * 3);
             originalPositions = new Float32Array(count * 3);
@@ -69,7 +70,7 @@
             for(let i=0; i<count; i++) {
                 const y = 1 - (i / (count - 1)) * 2;
                 const rAtY = Math.sqrt(1 - y * y);
-                const theta = 2.399963229728653 * i; 
+                const theta = 2.3999632297 * i; 
                 verts[i*3] = Math.cos(theta) * rAtY * 2.5;
                 verts[i*3+1] = y * 2.5;
                 verts[i*3+2] = Math.sin(theta) * rAtY * 2.5;
@@ -85,22 +86,48 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.1 : 0.02)); 
+            const speed = isThinking ? 0.01 : 0.002;
+            const amp = isThinking ? 0.15 : 0.03;
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * amp); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
-            dust.rotation.y += 0.002;
+            dust.rotation.y += speed;
             renderer.render(scene, camera);
         }
 
-        async function send() {
+        function toggleMic() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            const btn = document.getElementById('mic-btn');
+            recognition.onstart = () => { btn.classList.add('recording'); };
+            recognition.onend = () => { btn.classList.remove('recording'); };
+            recognition.onresult = (event) => {
+                document.getElementById('userInput').value = event.results[0][0].transcript;
+                sendText();
+            };
+            recognition.start();
+        }
+
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.pitch = 1.2; // SWEET VOICE PITCH
+            utter.rate = 0.95; // SMOOTH SPEED
+            const voices = synth.getVoices();
+            const sweet = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female'));
+            if(sweet) utter.voice = sweet;
+            synth.speak(utter);
+        }
+
+        async function sendText() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if(!text) return;
+            if(!text || isThinking) return;
             input.value = "";
             document.getElementById('chat').innerHTML += `<div class="msg">SRI: ${text}</div>`;
             isThinking = true;
-
             try {
                 const res = await fetch(`/api/chat`, {
                     method: 'POST',
@@ -109,6 +136,7 @@
                 });
                 const data = await res.json();
                 document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
+                speak(data.response);
                 const chatBox = document.getElementById('chat');
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch(e) { console.error(e); }
