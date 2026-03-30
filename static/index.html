@@ -2,25 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHAM_ZEN // CORE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AHAM_ZEN // MOBILE_CORE</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root { --cyan: #00ffff; --pink: #ff00ff; --dark: #050505; }
-        body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
         #auth-screen { position: fixed; inset: 0; z-index: 100; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: row; }
-        #canvas-box { flex: 1; background: #000; cursor: pointer; }
-        #side-panel { width: 350px; background: rgba(10,10,10,0.98); border-left: 1px solid #333; display: flex; flex-direction: column; padding: 20px; }
-        .brand { font-size: 22px; letter-spacing: 4px; margin-bottom: 20px; text-align: center; font-weight: bold; color: var(--cyan); }
+        
+        /* Layout starts as Column for Mobile */
+        #main-ui { display: none; height: 100vh; width: 100vw; flex-direction: column; }
+        
+        #canvas-box { flex: 1.5; background: #000; width: 100%; position: relative; min-height: 300px; }
+        
+        #side-panel { 
+            flex: 1; 
+            background: rgba(10,10,10,0.98); 
+            border-top: 1px solid #333; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 15px;
+            max-height: 50vh;
+        }
+
+        /* Desktop Switch: Side-by-Side */
+        @media (min-width: 768px) {
+            #main-ui { flex-direction: row; }
+            #canvas-box { flex: 1; }
+            #side-panel { width: 380px; height: 100vh; max-height: 100vh; border-top: none; border-left: 1px solid #333; }
+        }
+
+        .brand { font-size: 20px; letter-spacing: 4px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--cyan); }
         .brand span { color: var(--pink); }
-        #chat { flex: 1; overflow-y: auto; margin-bottom: 15px; scrollbar-width: none; }
-        .msg { margin-bottom: 12px; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--cyan); font-size: 14px; }
-        .input-area { display: flex; background: #1a1a1a; border-radius: 30px; padding: 8px 15px; border: 1px solid #444; align-items: center; }
-        input { background: none; border: none; color: white; flex: 1; padding: 8px; outline: none; }
-        #mic-btn { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 20px; padding: 0 10px; }
-        #mic-btn.recording { color: var(--pink); }
+        
+        #chat { flex: 1; overflow-y: auto; margin-bottom: 10px; scrollbar-width: none; }
+        #chat::-webkit-scrollbar { display: none; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--cyan); font-size: 14px; line-height: 1.4; }
+        
+        .input-area { display: flex; background: #1a1a1a; border-radius: 30px; padding: 5px 15px; border: 1px solid #444; align-items: center; }
+        input { background: none; border: none; color: white; flex: 1; padding: 12px; outline: none; font-size: 16px; } /* 16px prevents mobile zoom */
+        
+        #mic-btn { background: none; border: none; color: var(--cyan); cursor: pointer; font-size: 22px; padding: 0 10px; transition: 0.3s; }
+        #mic-btn.recording { color: var(--pink); text-shadow: 0 0 10px var(--pink); }
     </style>
 </head>
 <body>
@@ -37,7 +63,7 @@
             <div id="chat"></div>
             <div class="input-area">
                 <button id="mic-btn" onclick="toggleMic()">🎤</button>
-                <input type="text" id="userInput" placeholder="Awaiting command, Sri..." onkeypress="if(event.key==='Enter') sendText()">
+                <input type="text" id="userInput" placeholder="Ask Sri..." onkeypress="if(event.key==='Enter') sendText()">
             </div>
         </div>
     </div>
@@ -51,10 +77,9 @@
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-ui').style.display = 'flex';
             initSphere();
-            
             setTimeout(() => {
-                const msg = "Welcome back, Sri. I'm ready to assist you.";
-                document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${msg}</div>`;
+                const msg = "System ready. Welcome back, Sri.";
+                addMessage("ZEN", msg, true);
                 speak(msg);
             }, 1000);
         }
@@ -86,12 +111,21 @@
             dust = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.02, color: 0x00ffff, transparent: true, opacity: 0.8 }));
             scene.add(dust);
             camera.position.z = 7;
+            
+            window.addEventListener('resize', onWindowResize, false);
             animate();
+        }
+
+        function onWindowResize() {
+            const box = document.getElementById('canvas-box');
+            camera.aspect = box.clientWidth / box.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(box.clientWidth, box.clientHeight);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.12 : 0.04)); 
+            const breath = 1 + (Math.sin(Date.now() * 0.002) * (isThinking ? 0.15 : 0.04)); 
             const pos = dust.geometry.attributes.position.array;
             for(let i=0; i<pos.length; i++) pos[i] = originalPositions[i] * breath;
             dust.geometry.attributes.position.needsUpdate = true;
@@ -99,28 +133,25 @@
             renderer.render(scene, camera);
         }
 
-        // --- NATURAL FEMALE VOICE ---
         function speak(text) {
             const synth = window.speechSynthesis;
             synth.cancel();
             const utter = new SpeechSynthesisUtterance(text);
-            
-            utter.pitch = 1.05; // Balanced natural female pitch
-            utter.rate = 1.0; 
-            utter.lang = 'en-US'; 
-            
+            utter.pitch = 1.05; utter.rate = 1.0; utter.lang = 'en-US';
             const voices = synth.getVoices();
-            // Specifically searches for high-quality English female voices
-            const femaleVoice = voices.find(v => 
-                (v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Female')) 
-                && v.lang.includes('en')
-            );
-            
-            if (femaleVoice) {
-                utter.voice = femaleVoice;
-            }
-            
+            const femaleVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Google')));
+            if(femaleVoice) utter.voice = femaleVoice;
             synth.speak(utter);
+        }
+
+        function addMessage(sender, text, isAi) {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = 'msg';
+            if(isAi) div.style.borderLeftColor = 'var(--pink)';
+            div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
         }
 
         function toggleMic() {
@@ -141,7 +172,7 @@
             const text = input.value.trim();
             if(!text || isThinking) return;
             input.value = "";
-            document.getElementById('chat').innerHTML += `<div class="msg">SRI: ${text}</div>`;
+            addMessage("SRI", text, false);
             isThinking = true;
             try {
                 const res = await fetch(`/api/chat`, {
@@ -150,9 +181,8 @@
                     body: JSON.stringify({ message: text, user_email: user_email })
                 });
                 const data = await res.json();
-                document.getElementById('chat').innerHTML += `<div class="msg" style="border-left-color:var(--pink)">ZEN: ${data.response}</div>`;
+                addMessage("ZEN", data.response, true);
                 speak(data.response);
-                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
             } catch(e) { console.error(e); }
             isThinking = false;
         }
